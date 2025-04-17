@@ -1,0 +1,313 @@
+
+01.
+conn sys / as sysdba
+create user patel identified by patel;
+
+02.
+grant create table, create session, create constraint, create view, create sequence to patel;
+grant unlimited tablespace to patel;
+conn patel /patel@orclpdb;
+
+03.
+create table dept27
+(dept_id number(5) constraint dept_id_pk primary key, name varchar2(30));
+
+04.
+create table emp27 (
+emp_id number(5),
+l_name varchar2(30),
+f_name varchar2(30),
+salary number(8) constraint emp27_chk_salary check(salary>500),
+user_id varchar2(10));
+
+05.
+alter table emp27
+add dept_id number(5);
+
+06.
+alter table dept27
+modify name varchar2(35);
+
+07.
+alter table emp27
+drop column user_id;
+
+08.
+alter table emp27
+add constraint my__emp27_emp_id_pk primary key (emp_id);
+
+09.
+alter table emp27
+add constraint my_emp27_dept_id_fk
+foreign key (dept_id) references dept27;
+
+10.
+select constraint_name, constraint_type
+from user_constraints
+where table_name = 'EMP27';
+
+11.
+alter table emp27
+modify l_name varchar(30) not null;
+
+12.
+drop table emp27;
+flashback table emp27 to before drop;
+
+16.
+select last_name, department_id, salary
+from employees
+where (department_id,salary) in(select department_id, salary from employees 
+where commission_pct is not null);
+
+17.
+SELECT e.last_name, d.department_name, e.salary
+FROM employees e JOIN departments d
+ON e.department_id = d.department_id
+AND (salary, job_id) IN
+(SELECT e.salary, e.job_id
+FROM employees e JOIN
+departments d
+ON e.department_id =
+d.department_id
+AND d.location_id = 1700);
+
+18.
+SELECT last_name, hire_date, salary
+FROM employees
+WHERE (salary, manager_id) IN
+(SELECT salary, manager_id
+FROM employees
+WHERE last_name = 'Kochhar')
+AND last_name != 'Kochhar';
+
+19.
+SELECT last_name, job_id, salary
+FROM employees
+WHERE salary > ALL
+(SELECT salary
+FROM employees
+WHERE job_id = 'SA_MAN')
+ORDER BY salary DESC;
+
+20.
+SELECT employee_id, last_name, department_id
+FROM employees
+WHERE department_id IN (SELECT department_id
+FROM departments
+WHERE location_id IN
+(SELECT location_id
+FROM locations
+WHERE city LIKE 'T%'));
+
+21.
+SELECT last_name
+FROM employees outer
+WHERE outer.salary < (SELECT AVG(inner.salary)
+FROM employees inner
+WHERE inner.department_id
+= outer.department_id);
+
+
+-- PLSQL
+1
+
+BEGIN
+
+  DBMS_OUTPUT.PUT_LINE( 'Hello World');
+  END;
+  /
+
+  -- A)
+DECLARE
+v_today date:=sysdate;
+v_tommorrow date;
+
+BEGIN
+v_tommorrow:=sysdate+1;
+
+  DBMS_OUTPUT.PUT_LINE( 'Today''s date is '||v_today);
+  DBMS_OUTPUT.PUT_LINE( 'Tommorow''s date is '||v_tommorrow);
+  END;
+  /
+-- B)
+  DECLARE
+v_today date:=sysdate;
+v_tommorrow date;
+
+BEGIN
+v_tommorrow:=sysdate+1;
+
+  DBMS_OUTPUT.PUT_LINE( 'Hello World');
+  DBMS_OUTPUT.PUT_LINE( 'Today''s date is '||v_today);
+  DBMS_OUTPUT.PUT_LINE( 'Tommorow''s date is '||v_tommorrow);
+  END;
+  /
+
+-- 2
+DECLARE
+v_pf_sal number:=12;
+v_base_sal number:=45;
+v_sal employees.salary%TYPE;
+v_contribution employees.salary%type;
+
+BEGIN
+SELECT salary into v_sal
+from employees
+where employee_id=180;
+v_contribution :=v_sal*v_pf_sal/100*v_base_sal/100;
+
+
+
+  DBMS_OUTPUT.PUT_LINE( 'Employees salary is : '||v_sal);
+  DBMS_OUTPUT.PUT_LINE( 'Employees contribution to the providend fund is '
+  ||v_contribution);
+
+  END;
+  /
+
+
+-- 3
+DECLARE
+
+v_max_dpt departments.department_id%TYPE;
+BEGIN
+SELECT max(department_id) INTO v_max_dpt
+from employees;
+  DBMS_OUTPUT.PUT_LINE( 'The max dept ID  is: '||v_max_dpt);
+
+END;
+/
+
+
+-- 4
+
+DECLARE
+v_hire_date employees.hire_date%TYPE;
+
+v_sal employees.salary%TYPE;
+
+
+BEGIN
+SELECT hire_date, salary INTO v_hire_date, v_sal
+from employees
+where employee_id=100;
+
+DBMS_OUTPUT.PUT_LINE( 'The employee joined in: '||v_hire_date);
+DBMS_OUTPUT.PUT_LINE( 'The employee''s SALARY is : '||v_sal);
+
+END;
+/
+
+
+-- 5
+DECLARE
+v_new_dept departments.department_id%TYPE;
+v_dept_name departments.department_name%TYPE:='Software'; 
+BEGIN
+SELECT max(department_id)+10 INTO v_new_dept
+from departments;
+insert into departments(department_id, department_name, location_id)
+values(v_new_dept,'Software',NULL);
+DBMS_OUTPUT.PUT_LINE( 'The NEW dept id IS: '||v_new_dept);
+DBMS_OUTPUT.PUT_LINE( 'The NEW dept NAME IS: '||v_dept_name);
+END;
+/
+
+SELECT * from departments
+where department_name='Software';
+
+where location_id is null;
+-- 6
+DECLARE
+v_new_dept departments.department_id%TYPE;
+v_dept_name departments.department_name%TYPE:='Education'; 
+BEGIN
+SELECT max(department_id)+10 INTO v_new_dept
+from departments;
+insert into departments(department_id, department_name, location_id)
+values(v_new_dept,v_dept_name,NULL);
+DBMS_OUTPUT.PUT_LINE( 'The NEW dept id IS: '||v_new_dept);
+DBMS_OUTPUT.PUT_LINE( 'SQL%rowcount is: '||sql%rowcount);
+END;
+/
+
+
+
+-- 7
+create table messages(results number);
+
+BEGIN 
+  FOR i in 1..10 loop 
+  if i=6 or i=8 then null;
+  else 
+  insert into messages(results)
+  values(i);
+  end if;
+  end loop;
+  END;
+/
+
+
+DELETE FROM messages WHERE resultS IN (1,2,3,4,5,7,9,10);
+select * from messages; 
+-- 8
+create table emp
+as select employee_id, salary from employees;
+
+ alter table emp
+ add stars varchar2(50);
+
+ declare
+   v_empno emp.employee_id%type := 176;
+   v_asterisk emp.stars%type := null;
+   v_sal emp.salary%type;
+begin
+   select nvl(round(salary/1000),0) into v_sal
+   from emp
+   where employee_id = v_empno;
+   for i in 1..v_sal loop
+   v_asterisk := v_asterisk || '*';
+   end loop;
+   update emp
+   set stars = v_asterisk;
+   end;
+/
+
+
+
+
+
+
+
+create table emply
+as select employee_id, salary from employees;
+
+alter table emply
+add bangu varchar2(50);
+
+declare v_empno emply.employee_id%TYPE:=176;
+v_asterisk emply.bangu%TYPE :=NULL;
+v_sal emply.salary%TYPE;
+BEGIN
+select nvl(round(salary/1000),0) into v_sal
+from emply
+where employee_id = v_empno;
+for i in 1..v_sal loop
+v_asterisk := v_asterisk ||'*';
+end loop;
+update emply
+set bangu=v_asterisk;
+end;
+
+
+DECLARE
+variable b_basic_percent NUMBER
+VARIABLE b_pf_percent NUMBER
+:b_basic_percent:=45;
+:b_pf_percent:=12;
+BEGIN
+print b_basic_percent
+print b_pf_percent
+END;
+/

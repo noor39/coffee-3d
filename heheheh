@@ -1,115 +1,914 @@
+-- startup of device
+sys as sysdba
+sys
+alter session set container=orclpdb;
+alter pluggable database open;
+conn hr/hr@orclpdb;
+set SERVEROUTPUT ON
+set autoprint on
 
-01.
-conn sys / as sysdba
-create user patel identified by patel;
+cl scr
 
-02.
-grant create table, create session, create constraint, create view, create sequence to patel;
-grant unlimited tablespace to patel;
-conn patel /patel@orclpdb;
+hr/hr@orclpdb
 
-03.
-create table dept27
-(dept_id number(5) constraint dept_id_pk primary key, name varchar2(30));
 
-04.
-create table emp27 (
-emp_id number(5),
-l_name varchar2(30),
-f_name varchar2(30),
-salary number(8) constraint emp27_chk_salary check(salary>500),
-user_id varchar2(10));
+pl sql fundamentals 
+--  chapter 2 
+-- examining an pl sql block
 
-05.
-alter table emp27
-add dept_id number(5);
+Declare
+v_fname VARCHAR2 (20);
+BEGIN
+    SELECT first_name INTO v_fname FROM employees
+    WHERE employee_id=100;
+    DBMS_OUTPUT.PUT_LINE('the first name of the employee is '||v_fname);
 
-06.
-alter table dept27
-modify name varchar2(35);
+END;
+/
+-- enabling output of plsql block
+SET SERVEROUTPUT ON
+-- use  a predefined
+-- oracl package and its procedure 
+-- in the anonymous block
+DBMS_OUTPUT.PUT_LINE('the first name of the employee is '||v_fname);
 
-07.
-alter table emp27
-drop column user_id;
+-- chapter3
+-- declaring and initializing plsql variable
+-- syntax
 
-08.
-alter table emp27
-add constraint my__emp27_emp_id_pk primary key (emp_id);
+identifier [CONSTANT] datatype [NOT NULL]
+[:=| DEFAULT expr];
 
-09.
-alter table emp27
-add constraint my_emp27_dept_id_fk
-foreign key (dept_id) references dept27;
+DECLARE 
+v_hire_date DATE;
+v_location VARCHAR2(14):='Atlanta';
+v_deptno NUMBER (2) NOT NULL:=10;
+c_comm CONSTANT NUMBER :=1400;
 
-10.
-select constraint_name, constraint_type
-from user_constraints
-where table_name = 'EMP27';
+-- declaring and initializing pl sql variable
+DECLARE 
+v_myName VARCHAR2(20);
+BEGIN
+    DBMS_OUTPUT.PUT_LINE('My name is '||v_myName);
+    v_myName:='Anim';
+    DBMS_OUTPUT.PUT_LINE('My name is '||v_myName);
+    END;
+    /
 
-11.
-alter table emp27
-modify l_name varchar(30) not null;
+-- declaring and initializing pl sql variable
+DECLARE 
+v_myName VARCHAR2(20):='NOOR';
+BEGIN
+    v_myName:='Anim';
+    DBMS_OUTPUT.PUT_LINE('My name is '||v_myName);
+    END;
+    /
+-- delimeters in the string literals 
+DECLARE
+    v_event VARCHAR2(25);
+BEGIN
+    v_event:=q'!Fathers day!';
+    DBMS_OUTPUT.PUT_LINE('1st Friday in September is :'||v_event);
+    v_event:=q'!Mothers day!';
+    DBMS_OUTPUT.PUT_LINE('2nd Sunday in October is :'||v_event);
+    
+END;
+/
 
-12.
-drop table emp27;
-flashback table emp27 to before drop;
+-- declaring scaler variables
+DECLARE 
+    v_emp_job VARCHAR2(9);
+    v_count_loop BINARY_INTEGER:=0;
+    v_dept_total_sal NUMBER(9,2):=0;
+    v_orderdate DATE:=SYSDATE +7;
+    c_tax_rate CONSTANT NUMBER(3,2):=8.25;
+    v_valid BOOLEAN NOT NULL := TRUE;
+    ...
 
-16.
-select last_name, department_id, salary
-from employees
-where (department_id,salary) in(select department_id, salary from employees 
-where commission_pct is not null);
 
-17.
-SELECT e.last_name, d.department_name, e.salary
-FROM employees e JOIN departments d
-ON e.department_id = d.department_id
-AND (salary, job_id) IN
-(SELECT e.salary, e.job_id
-FROM employees e JOIN
-departments d
-ON e.department_id =
-d.department_id
-AND d.location_id = 1700);
+    -- declaring variables with % TYPE attribute
+    -- syntax
+    identifier table.column_name%TYPE;
 
-18.
-SELECT last_name, hire_date, salary
+    -- BIND variable
+    VARIABLE b_result NUMBER
+    BEGIN
+        SELECT (salary*12)+NVL(COMMISSION_PCT,0) INTO :b_result
+        FROM employees WHERE employee_id =144;
+    END;
+    /
+    PRINT b_result
+
+    set autoprint on;
+
+    -- referencing bind variables
+    VARIABLE b_emp_salary NUMBER
+    BEGIN
+    SELECT salary INTO :b_emp_salary
+    FROM employees WHERE employee_id =170;
+    END;
+    /
+    PRINT b_emp_salary
+    SELECT first_name, last_name
+    FROM employees   
+     WHERE salary=:b_emp_salary;
+
+-- ussing AUTOPRINT with Bind variables
+VARIABLE b_emp_salary
+SET AUTOPRINT ON
+DECLARE
+    v_empno NUMBER(6):=&empno;
+BEGIN
+    SELECT SALARY INTO :b_emp_salary
+    FROM employees WHERE employee_id=v_empno;
+END;
+/
+
+-- sql FUNTIONS IN PL/SQL;
+-- GET THE LENGTH OF A STIRING
+v_desc_size INTEGER(5);
+v_product_description VARCHAR2(70):-'You can use this  product with your radios for higer frequency';
+-- get the length of the string in the prod_description
+v_desc_size:=LENGTH(v_product_description);
+-- get the number of months an employee has worked;
+v_tenure := MONTHS_BETWEEN(CURRENT_DATE, v_hiredate);
+-- using sequences in PLSQL 
+Declare 
+v_new_id NUMBER;
+BEGIN
+v_new_id:=my_seq.NEXTVAL;
+END;
+/
+
+
+
+
+
+
+
+
+
+DECLARE v_lname employees.last_name%TYPE;
+BEGIN 
+SELECT last_name INTO v_lname
 FROM employees
-WHERE (salary, manager_id) IN
-(SELECT salary, manager_id
+WHERE employee_id=100;
+DBMS_OUTPUT.PUT_LINE('the haramzadas name is : '|| v_lname);
+END;
+DECLARE 
+v_lname employees.last_name%TYPE;
+BEGIN
+SELECT last_name INTO v_lname
 FROM employees
-WHERE last_name = 'Kochhar')
-AND last_name != 'Kochhar';
+WHERE employee_id =100;
+DBMS_OUTPUT.PUT_LINE('the mofiz is :' ||v_lname);
+END;
+/
 
-19.
-SELECT last_name, job_id, salary
+set serveroutput on 
+
+
+
+DECLARE 
+v_hiredate employees.hire_date%TYPE;
+v_salary employees.salary%TYPE;
+BEGIN
+SELECT hire_date, salary INTO v_hiredate, v_salary
 FROM employees
-WHERE salary > ALL
-(SELECT salary
+WHERE employee_id =100;
+DBMS_OUTPUT.PUT_LINE('the mofiz  started his work in :' ||v_hiredate);
+DBMS_OUTPUT.PUT_LINE('the mofiz  earns his salary is :' ||v_salary);
+END;
+/
+
+
+DECLARE 
+v_hiredate employees.hire_date%TYPE;
+v_salary employees.salary%TYPE;
+BEGIN
+SELECT hire_date+30, salary*COMMISSION_PCT INTO v_hiredate, v_salary
 FROM employees
-WHERE job_id = 'SA_MAN')
-ORDER BY salary DESC;
+WHERE employee_id =100;
+DBMS_OUTPUT.PUT_LINE('the mofiz  started his work in :' ||v_hiredate);
+DBMS_OUTPUT.PUT_LINE('the mofiz  earns his salary is :' ||v_salary);
+END;
+/
 
-20.
-SELECT employee_id, last_name, department_id
+
+DECLARE 
+v_sumsal NUMBER(10,2);
+BEGIN
+SELECT SUM(SALARY) INTO    v_sumsal
 FROM employees
-WHERE department_id IN (SELECT department_id
-FROM departments
-WHERE location_id IN
-(SELECT location_id
-FROM locations
-WHERE city LIKE 'T%'));
+WHERE department_id =60;
 
-21.
-SELECT last_name
-FROM employees outer
-WHERE outer.salary < (SELECT AVG(inner.salary)
-FROM employees inner
-WHERE inner.department_id
-= outer.department_id);
+DBMS_OUTPUT.PUT_LINE('the sum salary is :' ||v_sumsal);
+
+END;
+/
+
+-- *******************CHAPTER 5****************
+DECLARE v_lname employees.last_name%TYPE;
+BEGIN 
+SELECT last_name INTO v_lname
+FROM employees
+WHERE employee_id=100;
+DBMS_OUTPUT.PUT_LINE('the haramzadas name is : '|| v_lname);
+END;
+DECLARE 
+v_lname employees.last_name%TYPE;
+BEGIN
+SELECT last_name INTO v_lname
+FROM employees
+WHERE employee_id =100;
+DBMS_OUTPUT.PUT_LINE('the mofiz is :' ||v_lname);
+END;
+/
+
+set serveroutput on 
 
 
--- PLSQL
+
+DECLARE 
+v_hiredate employees.hire_date%TYPE;
+v_salary employees.salary%TYPE;
+BEGIN
+SELECT hire_date, salary INTO v_hiredate, v_salary
+FROM employees
+WHERE employee_id =100;
+DBMS_OUTPUT.PUT_LINE('the mofiz  started his work in :' ||v_hiredate);
+DBMS_OUTPUT.PUT_LINE('the mofiz  earns his salary is :' ||v_salary);
+END;
+/
+
+
+DECLARE 
+v_hiredate employees.hire_date%TYPE;
+v_salary employees.salary%TYPE;
+BEGIN
+SELECT hire_date+30, salary*COMMISSION_PCT INTO v_hiredate, v_salary
+FROM employees
+WHERE employee_id =100;
+DBMS_OUTPUT.PUT_LINE('the mofiz  started his work in :' ||v_hiredate);
+DBMS_OUTPUT.PUT_LINE('the mofiz  earns his salary is :' ||v_salary);
+END;
+/
+
+-- the creation of sumsal into use hoy just to gain the insight to create a temporary storage for the variable in order to store them in the BEGIN section 
+DECLARE 
+v_sumsal NUMBER(10,2);
+BEGIN
+SELECT SUM(SALARY) INTO    v_sumsal
+FROM employees
+WHERE department_id =60;
+
+DBMS_OUTPUT.PUT_LINE('the sum salary is :' ||v_sumsal);
+
+END;
+/
+
+
+DECLARE 
+
+BEGIN
+    select sum(hire_date) into 
+
+
+
+
+
+BEGIN
+SELECT SUM(SALARY) INTO    v_sumsal
+FROM employees
+WHERE department_id =60;
+
+DBMS_OUTPUT.PUT_LINE('the sum salary is :' ||v_sumsal);
+
+END;
+
+
+
+-- evidence
+BEGIN
+   DBMS_OUTPUT.put_line ('Hello World!');
+END;
+
+DECLARE 
+v_today  date:=sysdate;
+v_tomorrow  v_today%TYPE;
+
+BEGIN
+v_tomorrow := v_today+1;
+DBMS_OUTPUT.put_line ('Hello World!');
+DBMS_OUTPUT.PUT_LINE('Today''s date is  :'||v_today);
+DBMS_OUTPUT.PUT_LINE('Tomorrow''s date is :'||v_tomorrow);
+
+END;
+/
+
+
+
+
+CREATE INDEX emp_last_name_idx
+ON employees (last_name);
+
+CREATE TABLE NEW
+
+select * from tabs;
+
+-- number 1 
+DECLARE
+    v_emp_name employees.last_name%TYPE;
+    v_ann_sal NUMBER;
+BEGIN
+    SELECT last_name, 12 * salary INTO v_emp_name, v_ann_sal
+    FROM employees
+    WHERE employee_id = 110; 
+
+    DBMS_OUTPUT.PUT_LINE('Employee Name: ' || v_emp_name || '  Annual Salary: ' || v_ann_sal);
+END;
+/
+-- number 2
+DECLARE
+  v_sum_sal employees.salary%TYPE;
+  v_max_sal employees.salary%TYPE;
+BEGIN
+  SELECT SUM(salary), MAX(salary) INTO v_sum_sal, v_max_sal
+  FROM employees
+  WHERE department_id = 50;
+  
+  DBMS_OUTPUT.PUT_LINE('Sum of Salaries: ' || v_sum_sal);
+  DBMS_OUTPUT.PUT_LINE('Maximum Salary: ' || v_max_sal);
+END;
+/
+
+BEGIN
+INSERT INTO employees 
+(employee_id, first_name, last_name, email, hire_date, job_id, salary)
+values(employees_seq.NEXTVAL, 'NOOR','Ahmed','kzhmd@gmail.com',sysdate, 'IT_PROG',4000);
+END;
+/
+BEGIN
+SELECT employee_id, last_name, salary
+FROM employees
+WHERE job_id='ST_CLERK';
+END;
+
+BEGIN
+UPDATE employees 
+SET salary = salary+1000
+WHERE job_id='ST_CLERK';
+END;
+
+DECLARE
+v_sal_increase employees.salary%TYPE:=1200;;
+v_sal_increase 
+BEGIN
+UPDATE employees 
+SET salary = salary+v_sal_increase
+WHERE job_id='ST_CLERK';
+END;
+/
+
+
+
+DECLARE
+v_desc_size INTEGER(5);
+v_tenure INTEGER(23);
+v_hiredate employee.hire_date%TYPE;
+v_product_description VARCHAR2(70):='You can use this product with your radios for higher frequency';
+-- get the length of the string in prod_description
+BEGIN
+v_desc_size:=LENGTH(v_product_description);
+v_tenure:=MONTHS_BETWEEN (CURRENT_DATE, v_hiredate);
+END;
+/
+
+
+-- using sequences in PL/SQL expressions
+
+DECLARE
+v_new_id NUMBER (7);
+BEGIN 
+  v_new_id := my_seq.NEXTVAL;
+  END;
+  /
+
+
+DECLARE
+v_myage NUMBER:=1;
+BEGIN
+  IF v_myage<11
+    THEN 
+    DBMS_OUTPUT.PUT_LINE('I am a child');
+  END IF;
+END;
+/
+
+
+DECLARE
+v_myage NUMBER:=31;
+BEGIN
+  IF v_myage<11 --if this condition is true only then the following code will go to the then condition else it will not go to the then statements instruction
+    THEN 
+    DBMS_OUTPUT.PUT_LINE('I am a child');
+  END IF;
+END;
+/
+
+
+DECLARE
+v_myage NUMBER:=1;
+v_myfirstname VARCHAR2(30):='Noor';
+BEGIN
+  IF (v_myfirstname='Noor' AND v_myage<11)
+    THEN 
+    DBMS_OUTPUT.PUT_LINE('I am a child');
+    ELSE 
+    DBMS_OUTPUT.PUT_LINE('I am not a child');
+  END IF;
+END;
+/
+
+DECLARE
+v_myage NUMBER:=31;
+v_myfirstname VARCHAR2(30):='Noor';
+BEGIN
+  IF (v_myfirstname='Noor' AND v_myage<11)
+    THEN 
+    DBMS_OUTPUT.PUT_LINE('I am a child');
+    ELSE 
+    DBMS_OUTPUT.PUT_LINE('I am not a child');
+  END IF;
+END;
+/
+
+DECLARE
+v_myage NUMBER:=31;
+v_myfirstname VARCHAR2(30):='Noor';
+BEGIN
+  IF (v_myfirstname='Noor' OR v_myage<11)
+    THEN 
+    DBMS_OUTPUT.PUT_LINE('I am a child');
+    ELSE 
+    DBMS_OUTPUT.PUT_LINE('I am not a child');
+  END IF;
+END;
+/
+
+
+
+DECLARE
+v_myage NUMBER:=50;
+
+BEGIN
+  IF v_myage<11
+    THEN 
+    DBMS_OUTPUT.PUT_LINE('I am a child');
+    ELSIF v_myage<20 THEN  
+    DBMS_OUTPUT.PUT_LINE('I am young');
+     ELSIF v_myage<30 THEN  
+    DBMS_OUTPUT.PUT_LINE('I am in my twenties');
+     ELSIF v_myage<40 THEN  
+    DBMS_OUTPUT.PUT_LINE('I am in my thirties');
+     ELSIF v_myage<50 THEN  
+    DBMS_OUTPUT.PUT_LINE('I am yin my fifties');
+    ELSE 
+    DBMS_OUTPUT.PUT_LINE('I am always young');
+  END IF;
+END;
+/
+
+DECLARE
+v_myage NUMBER:=50;
+
+BEGIN
+  IF v_myage<11
+    THEN 
+    DBMS_OUTPUT.PUT_LINE('I am a child');
+    ELSIF v_myage<20 THEN  
+    DBMS_OUTPUT.PUT_LINE('I am young');
+     ELSIF v_myage<30 THEN  
+    DBMS_OUTPUT.PUT_LINE('I am in my twenties');
+     ELSIF v_myage<40 THEN  
+    DBMS_OUTPUT.PUT_LINE('I am in my thirties');
+     ELSIF v_myage<50 THEN  
+    DBMS_OUTPUT.PUT_LINE('I am yin my fifties');
+    ELSE 
+    DBMS_OUTPUT.PUT_LINE('I am always young');
+  END IF;
+END;
+/
+--  CASE expressions
+DECLARE 
+v_grade CHAR(1):= UPPER('&grade'); -- CHAR holo fixed length, VARCHAR holo variable length jototuku jayga diba tototuku kaj hobe
+v_apprisal VARCHAR2(20);
+BEGIN
+  v_apprisal :=
+  CASE v_grade
+  WHEN 'A' THEN 'SHABBASH, Bagher Baccha'
+  WHEN 'B' THEN 'MOTAMUTI, Chole'
+  WHEN 'C' THEN 'Eivabe hobe na, kopila!'
+  ELSE 'Ore baba nai to konokisu'
+  END;
+  DBMS_OUTPUT.put_line('TUMI PAISO GRADE'||v_grade||'tahole tomar aprisal holo'||v_apprisal);
+END;
+/
+
+DECLARE 
+v_weight NUMBER(3):= 600;
+v_message VARCHAR2(255):='Product 10012';
+BEGIN 
+  DECLARE
+  v_weight NUMBER(3):=1;
+  v_message VARCHAR2(255):='Product 11001';
+  v_new_locn VARCHAR2(50):='Europe';
+  BEGIN
+    v_weight:=v_weight+1;
+    v_new_locn:='Western' ||v_new_locn;
+
+  END;
+  v_weight :=v_weight+1;
+  v_message:=v_message||'is in stock';
+  v_new_locn:='Western'||v_new_locn;
+  END;
+  /
+
+
+  DECLARE 
+  v_customer VARCHAR2(50):='Womansport';
+  v_credit_rating VARCHAR2(50):='EXCELLENT';
+  BEGIN 
+    DECLARE
+      v_customer NUMBER(7):=201;
+      v_name VARCHAR2(25):='Unisports';
+    BEGIN
+      v_credit_rating:='Good';
+    END;
+  END;
+  /
+
+  --VARIABLE b_basic_percent NUMBER 
+  -- VARIABLE v_pf_percent NUMBER
+  SET SERVEROUTPUT ON
+  /*:b_basic_percent:=45;
+  :b_pf_percent:=12;*/
+
+  DECLARE
+  -- b_basic_percent:=45;
+  -- b_pf_percent:=12;
+  v_fname VARCHAR2(15);
+  v_emp_sal NUMBER(10);
+
+BEGIN
+  SELECT first_name, salary INTO v_fname, v_emp_sal
+  FROM employees
+  WHERE employee_id=110;
+
+  DBMS_OUTPUT.PUT_LINE('Hello'||v_fname );
+END;
+/
+
+DECLARE 
+v_fname VARCHAR2(20);
+v_lname VARCHAR2(15) DEFAULT 'fernandez';
+BEGIN
+  DBMS_OUTPUT.PUT_LINE(v_fname||' '||v_lname);
+END;
+/
+
+
+DECLARE 
+v_today DATE:=sysdate;
+v_tomorrow v_today%TYPE;
+BEGIN
+  v_tomorrow=v_today+1;
+  DBMS_OUTPUT.PUT_LINE('Hello World');
+  DBMS_OUTPUT.PUT_LINE('Today''s date is'||today);
+  DBMS_OUTPUT.PUT_LINE('Tommorow's'date is'||v_tomorrow);
+END;
+/
+
+
+
+
+
+
+
+
+
+
+
+
+-- evidence
+1
+DECLARE
+v_basic_sal  NUMBER:=12;
+v_pf NUMBER:=45;
+v_contribute NUMBER;
+v_sal NUMBER;
+BEGIN
+SELECT salary INTO v_sal
+FROM employees
+WHERE employee_id=150;
+v_contribute:=v_sal*v_basic_sal/100*v_pf/100;
+DBMS_OUTPUT.PUT_LINE('The employee''s salary:'||v_sal);
+DBMS_OUTPUT.PUT_LINE('HER/HIS contributions to Provident fund are :'||v_contribute);
+END;
+/
+
+2
+DECLARE v_max_deptno departments.department_id%TYPE;
+v_max_sal NUMBER;
+BEGIN
+  SELECT MAX(department_id) INTO v_max_deptno
+  FROM departments;
+  DBMS_OUTPUT.PUT_LINE('maximum department id is :'||v_max_deptno );
+
+END;
+/
+
+3
+DECLARE 
+v_sal employees.salary%TYPE;
+v_hire employees.hire_date%TYPE;
+BEGIN
+  SELECT hire_date, salary INTO v_hire,v_sal
+  FROM employees
+  WHERE employee_id=110;
+  DBMS_OUTPUT.PUT_LINE('employee Join DATE is :'||v_hire);
+  DBMS_OUTPUT.PUT_LINE('employee''s salary is :'||v_sal );
+
+END;
+/
+
+4
+
+DECLARE
+v_dpt_name VARCHAR2(20):='Software';
+v_dpt_id departments.department_id%TYPE;;
+v_max_dpt NUMBER;
+BEGIN
+  SELECT MAX(department_id)+10 INTO v_max_dpt;
+  INSERT INTO departments (department_id, department_name, location_id)
+   VALUES (v_dpt_id, v_dpt_name,NULL); 
+ 
+  DBMS_OUTPUT.PUT_LINE('the new max dept is :'||v_max_dpt);
+  DBMS_OUTPUT.PUT_LINE('new departments id is :'||v_dpt_id );
+
+END;
+/
+
+
+DECLARE
+  l_department_id departments.department_id%TYPE;
+BEGIN
+  -- Fetch the maximum department_id and add 10 to it
+  SELECT MAX(department_id) + 10 INTO l_department_id FROM department;
+
+  -- Insert the new department
+  INSERT INTO department (department_id, department_name)
+  VALUES (l_department_id, 'Software'); 
+
+
+END;
+/
+
+--  basic loop example
+CREATE TABLE loc(location_id NUMBER(10),
+city   VARCHAR2(30),
+country_id VARCHAR2(5));
+
+INSERT INTO loc
+VALUES (1000,'Mexico City','MX');
+
+INSERT INTO loc
+VALUES (1100,'Oxford','UK');
+
+INSERT INTO loc
+VALUES (1200,'Montreal','CA');
+
+SELECT * from loc
+COUNT(loc)
+
+-- LOOP
+DECLARE 
+v_countryid loc.country_id%TYPE:='CA';
+v_loc_id loc.location_id%TYPE;
+v_counter NUMBER(20):=1;
+v_new_city loc.city%TYPE:='Montreal';
+
+BEGIN 
+  SELECT MAX(location_id) INTO v_loc_id
+  FROM loc
+  WHERE country_id=v_countryid;
+
+LOOP 
+  INSERT INTO loc(location_id, city, country_id)
+  VALUES((v_loc_id+v_counter),v_new_city,v_countryid);
+  v_counter:=v_counter+1;
+  EXIT WHEN v_counter>252;
+END LOOP;
+DBMS_OUTPUT.PUT_LINE(v_loc_id||' '||v_new_city||' '||v_countryid);
+DBMS_OUTPUT.PUT_LINE(v_counter);
+END;
+/
+
+
+DECLARE 
+v_countryid loc.country_id%TYPE:='BD';
+v_loc_id loc.location_id%TYPE;
+v_counter NUMBER(2):=1;
+v_new_city loc.city%TYPE:='DHAKA';
+
+BEGIN 
+  SELECT MAX(location_id) INTO v_loc_id
+  FROM loc
+  WHERE country_id=v_countryid;
+
+      WHILE v_counter<=3 
+        LOOP 
+  INSERT INTO loc(location_id, city, country_id)
+  VALUES((v_loc_id+v_counter),v_new_city,v_countryid);
+  v_counter:=v_counter+1;
+DBMS_OUTPUT.PUT_LINE(v_counter);
+END LOOP;
+END;
+/
+
+
+
+
+DECLARE 
+v_countryid loc.country_id%TYPE:='BD';
+v_loc_id loc.location_id%TYPE;
+v_new_city loc.city%TYPE:='Chittagong';
+
+BEGIN 
+  SELECT MAX(location_id) INTO v_loc_id
+  FROM loc
+  WHERE country_id=v_countryid;
+
+      FOR i IN 2..5
+      LOOP 
+  INSERT INTO loc(location_id, city, country_id)
+  VALUES((v_loc_id+i),v_new_city,v_countryid);
+
+
+END LOOP;
+END;
+/
+
+
+DECLARE 
+v_countryid loc.country_id%TYPE:='BD';
+v_loc_id loc.location_id%TYPE;
+v_new_city loc.city%TYPE:='Chittagong';
+
+BEGIN 
+  SELECT MAX(location_id) INTO v_loc_id
+  FROM loc
+  WHERE location_id=1200;
+
+      FOR i IN 2..5
+      LOOP 
+  INSERT INTO loc(location_id, city, country_id)
+  VALUES((v_loc_id+i),v_new_city,v_countryid);
+
+
+END LOOP;
+END;
+/
+
+DECLARE 
+v_countryid loc.country_id%TYPE:='BD';
+v_loc_id loc.location_id%TYPE;
+v_new_city loc.city%TYPE:='Chittagong';
+
+BEGIN 
+  SELECT MAX(location_id) INTO v_loc_id
+  FROM loc
+  WHERE location_id=1200;
+
+      FOR i IN REVERSE 2..5 
+      LOOP 
+  INSERT INTO loc(location_id, city, country_id)
+  VALUES((v_loc_id+i),v_new_city,v_countryid);
+
+
+END LOOP;
+END;
+/
+
+DECLARE 
+v_myage VARCHAR2(30);
+BEGIN
+  IF v_myage <11
+  THEN 
+    DBMS_OUTPUT.PUT_LINE('I am a child');
+  END IF;
+END;
+/
+
+DECLARE
+  v_myage number:=31;
+BEGIN
+  IF 
+    v_myage <11 THEN 
+    DBMS_OUTPUT.PUT_LINE('I am a child');
+  ELSE
+    DBMS_OUTPUT.PUT_LINE('I am not a child');
+  END IF;
+END;
+/
+
+-- ######################## chapter 7 working with composite data type #############################
+-- #############################################################################################################
+DECLARE
+ emp_rec employees%ROWTYPE;
+BEGIN
+   SELECT * INTO emp_rec FROM employees
+   WHERE employee_id =100;
+   DBMS_OUTPUT.PUT_LINE(emp_rec.last_name||' '||
+emp_rec.job_id||' '||emp_rec.salary);
+END;
+/
+
+-- user defined record royeche, variable explicitly declare korechen, ekhon 1 ta record means onekgula variables. onekgula fields. last name reference korle last name declasre korete parben. user defined way ta pacchen. declare kore oi field huloke ekta type  nite hoy, type er jonno identifier nite hoy . field declare , field ke type e ba group e nilam, oi group er jonno ekta row. etai holo user defined. 
+--  jemon field record ke record er 
+
+
+-- creating a PL/SQL record
+
+DECLARE
+TYPE t_rec IS RECORD 
+(v_sal number(8), 
+v_minsal number(8) DEFAULT 1000, 
+v_hire_date employees.hire_date%type,
+v_rec1 employees%rowtype);
+v_myrec t_rec;
+BEGIN 
+  v_myrec.v_sal := v_rec.v_minsal+500;
+  v_myrec.v_hire_date:=sysdate;
+  SELECT * INTO v_myrec.v_rec1
+    FROM employees WHERE employee_id=100;
+    DBMS_OUTPUT.PUT_LINE(v_myrec.v_rec1.last_name||
+    ' '||to_char(v_myrec.v_hire_date)||
+    ' '||(v_myrec.v_sal));
+END;
+/
+
+-- record use hoy SELECT,UPDATE , DELETE korte
+CREATE TABLE retired_emps
+(empno NUMBER)
+
+/*to create the messages table write a PL/SQL block to insert numbers into the messages table. a) insert the numbers 1 through 10, excluding 6 and 8. b) commit before the end of the block.
+*/
+-- Create the messages table
+CREATE TABLE messages (
+    num NUMBER
+);
+
+-- PL/SQL block to insert numbers and commit
+BEGIN
+    FOR i IN 1..10 LOOP
+        IF i NOT IN (6, 8) THEN
+            INSERT INTO messages (num) VALUES (i);
+        END IF;
+    END LOOP;
+    COMMIT;
+END;
+/
+
+/*write logic append an asterisk(*) to the string for every $1000 of the salary, for example , if the employee earns $8000, the string of the asterisks should contain eight asterisks. IF the employee earns $12500 the string of asterisks should contain 13 asterisks;*/
+
+
+-- Example for a specific salary value (e.g., $12500)
+SELECT RPAD('*', CEIL(12500 / 1000), '*') AS asterisks FROM DUAL;
+
+-- For an employees table:
+SELECT 
+    employee_id, 
+    salary, 
+    RPAD('*', CEIL(salary / 1000), '*') AS salary_asterisks 
+FROM employees;
+
+
+
+
+DECLARE
+    v_salary NUMBER := 12500; -- Example salary
+    v_asterisks VARCHAR2(100);
+BEGIN
+    v_asterisks := RPAD('*', CEIL(v_salary / 1000), '*');
+    DBMS_OUTPUT.PUT_LINE('Asterisks: ' || v_asterisks);
+END;
+/
+
+
+
+
+
 1
 
 BEGIN
@@ -144,170 +943,1705 @@ v_tommorrow:=sysdate+1;
   END;
   /
 
--- 2
+
+
+
+
+
+
+
+
+
+-- CHAPTER 7 Working with composite data type;
+set autoprint on
+set serveroutput on
+
+flashback table v_emp_rec to before drop
+--  creating a PL/SQL record
+-- syntax
+TYPE type_name IS RECORD 
+    (field_declaration[,field_declaration]...);
+
+
+IDENTIFIER type_name;
+    field_declaration:
+        field_name{field_type|variable%TYPE
+        |table.coulumn%TYPE|table%ROWTYPE}
+        [[NOT NULL]{:=|DEFAULT}expr]
+--/syntax 
 DECLARE
-v_pf_sal number:=12;
-v_base_sal number:=45;
-v_sal employees.salary%TYPE;
-v_contribution employees.salary%type;
+TYPE t_rec IS RECORD 
+(v_sal number(8),
+v_minsal number(8) DEFAULT 1000,
+v_hire_date employees.hire_date%type,
+v_recl employees%ROWTYPE);
+v_myrec t_rec;
+BEGIN
+    v_myrec.v_sal :=v_myrec.v_minsal +500;
+    v_myrec.v_hire_date := SYSDATE;
+    SELECT * INTO v_myrec.v_recl
+            FROM employees WHERE employee_id=100;
+    DBMS_OUTPUT.PUT_LINE(v_myrec.v_recl.last_name||' '||
+    TO_CHAR (v_myrec.v_hire_date)||' '||TO_CHAR(v_myrec.v_sal));
+END;
+/
+
+CREATE TABLE retired_emps as select *%TYPE from employees; 
+create table v_emp_rec as select * from employees;
+TRUNCATE TABLE retired_emps; --removes all data from table 
+DROP TABLE retired_emps;
+
+CREATE TABLE retired_emps (empno NUMBER, ename VARCHAR2(45),job VARCHAR2(23),
+mgr NUMBER, hiredate DATE, leavedate DATE,
+ sal NUMBER, comm NUMBER, deptno NUMBER);
+
+
+CREATE TABLE retired_emps (empno NUMBER(4), ename VARCHAR2(45),job VARCHAR2(9),
+mgr NUMBER(4), hiredate DATE, leavedate DATE,
+ sal NUMBER(7,2), comm NUMBER(7,2), deptno NUMBER(2));
+
+
+-- 
+DECLARE
+v_employee_number number:=125;
+v_emp_rec employees%ROWTYPE;
 
 BEGIN
-SELECT salary into v_sal
-from employees
-where employee_id=180;
-v_contribution :=v_sal*v_pf_sal/100*v_base_sal/100;
 
 
+SELECT * INTO v_emp_rec FROM employees
+WHERE employee_id=v_employee_number;
+INSERT INTO retired_emps(empno, ename,job,
+mgr, hiredate, leavedate,
+ sal, comm, deptno)
+VALUES(v_emp_rec.employee_id, v_emp_rec.last_name,v_emp_rec.job_id,
+v_emp_rec.manager_id,v_emp_rec.hire_date,SYSDATE,
+v_emp_rec.salary,v_emp_rec.commission_pct,v_emp_rec.department_id);
 
-  DBMS_OUTPUT.PUT_LINE( 'Employees salary is : '||v_sal);
-  DBMS_OUTPUT.PUT_LINE( 'Employees contribution to the providend fund is '
-  ||v_contribution);
-
-  END;
-  /
-
-
--- 3
-DECLARE
-
-v_max_dpt departments.department_id%TYPE;
-BEGIN
-SELECT max(department_id) INTO v_max_dpt
-from employees;
-  DBMS_OUTPUT.PUT_LINE( 'The max dept ID  is: '||v_max_dpt);
 
 END;
 /
 
-
--- 4
+-- INSERTING  a Record Using %ROWTYPE
 
 DECLARE
-v_hire_date employees.hire_date%TYPE;
-
-v_sal employees.salary%TYPE;
-
+v_employee_number number:=125;
+v_emp_rec retired_emps%ROWTYPE;
 
 BEGIN
-SELECT hire_date, salary INTO v_hire_date, v_sal
-from employees
-where employee_id=100;
 
-DBMS_OUTPUT.PUT_LINE( 'The employee joined in: '||v_hire_date);
-DBMS_OUTPUT.PUT_LINE( 'The employee''s SALARY is : '||v_sal);
+
+SELECT employee_id, last_name, job_id, manager_id, hire_date, hire_date,salary, commission_pct,
+department_id INTO v_emp_rec FROM employees;
+WHERE employee_id=v_employee_number;
+INSERT INTO retired_emps VALUES v_emp_rec;
+
 
 END;
 /
 
+select * from retired_emps;
 
--- 5
+
+-- Updating a Row in a Table by Using a Record
+
 DECLARE
-v_new_dept departments.department_id%TYPE;
-v_dept_name departments.department_name%TYPE:='Software'; 
+v_employee_number number:=125;
+v_emp_rec retired_emps%ROWTYPE;
+
 BEGIN
-SELECT max(department_id)+10 INTO v_new_dept
-from departments;
-insert into departments(department_id, department_name, location_id)
-values(v_new_dept,'Software',NULL);
-DBMS_OUTPUT.PUT_LINE( 'The NEW dept id IS: '||v_new_dept);
-DBMS_OUTPUT.PUT_LINE( 'The NEW dept NAME IS: '||v_dept_name);
+
+
+SELECT * INTO v_emp_rec FROM retired_emps
+WHERE empno=v_employee_number;
+v_emp_rec.leavedate:=CURRENT_DATE;
+UPDATE retired_emps SET ROW =v_emp_rec WHERE
+empno =v_employee_number;
+
 END;
 /
 
-SELECT * from departments
-where department_name='Software';
+-- Steps to create an associative array
+-- Syntax
+TYPE type_name IS TABLE OF  
+{column_type[NOT NULL]|variable%TYPE[NOT NULL]
+|table.column%TYPE[NOT NULL]
+|table%ROWTYPE}
+INDEX BY {PLS_INTEGER|BINARY_INTEGER
+|VARCHAR2(<size>)};
+identifier type_name;
 
-where location_id is null;
--- 6
+-- example
+...
+TYPE ename_table_type IS TABLE OF 
+employees.last_name%TYPE
+INDEX BY PLS_INTEGER;
+...
+ename_table ename_table_type;
+
+
+-- Creating and accessing associative arrays
+...
 DECLARE
-v_new_dept departments.department_id%TYPE;
-v_dept_name departments.department_name%TYPE:='Education'; 
+TYPE ename_table IS TABLE OF 
+employees.last_name%TYPE
+INDEX BY PLS_INTEGER;
+TYPE hiredate_table_type IS TABLE OF DATE 
+INDEX BY PLS_INTEGER;
+ename_table ename_table_type;
+hiredate_table hiredate_table_type;
+
 BEGIN
-SELECT max(department_id)+10 INTO v_new_dept
-from departments;
-insert into departments(department_id, department_name, location_id)
-values(v_new_dept,v_dept_name,NULL);
-DBMS_OUTPUT.PUT_LINE( 'The NEW dept id IS: '||v_new_dept);
-DBMS_OUTPUT.PUT_LINE( 'SQL%rowcount is: '||sql%rowcount);
+ename_table(1) :='CAMERON';
+hiredate_table(8):=SYSDATE+7;
+IF ename_table.EXISTS(1) THEN 
+INSERT INTO ...
+...
+END;
+/
+...
+
+-- index by table of records open
+DECLARE
+TYPE dept_table_type
+IS  
+    TABLE OF departments%ROWTYPE INDEX BY VARCHAR2(20) ;
+    dept_table dept_table_type ;
+    -- Each element of dept_table is a record
+
+BEGIN
+    SELECT * INTO dept_table(1) FROM departments 
+    WHERE department_id =10;
+    DBMS_OUTPUT.PUT_LINE(dept_table(1).department_id||
+    ' '||dept_table(1).department_name||
+    ' '||dept_table(1).manager_id);
 END;
 /
 
 
 
--- 7
-create table messages(results number);
+-- index by table of records 
+DECLARE
+TYPE emp_table_type IS TABLE OF 
+    employees%ROWTYPE INDEX BY PLS_INTEGER;
+    my_emp_table emp_table_type;
+    max_count NUMBER(3):=104;
+
+BEGIN
+    FOR i IN 100..max_count
+    LOOP
+
+        SELECT * INTO my_emp_table(i) FROM employees
+        WHERE employee_id=i;
+
+    END LOOP;
+    FOR i IN my_emp_table.FIRST..my_emp_table.LAST
+    LOOP 
+        DBMS_OUTPUT.PUT_LINE(my_emp_table(i).last_name);
+    END LOOP;
+
+
+
+END;
+/
+-- NESTED TABLE SYNTAX
+TYPE type_name IS TABLE OF  
+{column_type|variable%TYPE
+|table.column%TYPE}[NOT NULL]
+|table.%ROWTYPE
+
+-- 
+TYPE location_type IS TABLE OF locations.city%TYPE;
+offices location_type;
+
+-- IF WE DONT INITIALIZE A NESTED TABLE ITS AUTOMATICALLY INITIALIZED TO NULL
+    offices := location_type('Dhaka','Tokyo','Shanghai','Oxford');
+
+    SET serveroutput on ;
+
+    
+
+DECLARE
+ TYPE location_type IS TABLE OF locations.city%TYPE;
+    offices location_type;
+    table_count NUMBER;
+    
+BEGIN
+    offices:=location_type('Dhaka','Tokyo','Shanghai','Oxford');
+
+    FOR i in 1..offices.COUNT() 
+    LOOP
+        DBMS_OUTPUT.PUT_LINE(offices(i));
+    END LOOP;
+END;
+/
+
+
+
+
+
+
+
+
+
+
+-- #############################################################################################################
+
+-- CHAPTER 8 USING Explicit cursors
+
+-- #############################################################################################################
+CURSOR cursor_name IS  
+    select_statement;
+-- Declaring cursor********
+-- -- DECLARE
+--  v_locid NUMBER:=1700;
+-- CURSOR c_dept_cursor IS    
+--     SELECT * FROM departments
+--     WHERE location_id=v_locid;
+
+DECLARE
+CURSOR c_emp_cursor IS
+SELECT employee_id, last_name FROM employees
+		WHERE department_id=30;
+v_empno employees.employee_id%TYPE;
+V_lname employees.last_name%TYPE;
+BEGIN
+	OPEN c_emp_cursor;
+	FETCH c_emp_cursor INTO v_empno, v_lname;
+	DBMS_OUTPUT.PUT_LINE (v_empno||' '||v_lname);
+END;
+/
+
+-- opening the cursor
+DECLARE c_emp_cursor IS   
+SELECT employee_id, last_name FROM employees
+WHERE department_id =30;
+...
+BEGIN 
+    OPEN c_emp_cursor;
+
+
+DECLARE
+CURSOR c_emp_cursor IS
+SELECT employee_id, last_name FROM employees
+		WHERE department_id=50; --eikhane dept id te change korlei moja hobe
+v_empno employees.employee_id%TYPE;
+V_lname employees.last_name%TYPE;
+BEGIN
+	OPEN c_emp_cursor;
+    LOOP
+	FETCH c_emp_cursor INTO v_empno, v_lname;
+    EXIT WHEN c_emp_cursor%NOTFOUND;
+	DBMS_OUTPUT.PUT_LINE (v_empno||' '||v_lname);
+    END LOOP;
+END;
+/
+
+-- FETCHING data from the cursor
+DECLARE 
+    CURSOR c_emp_cursor IS    
+    SELECT employee_id, last_name FROM employees 
+    WHERE department_id=30;
+v_empno employees.employee_id%TYPE;
+v_lname employees.last_name%TYPE;
+BEGIN
+    OPEN c_emp_cursor;
+    FETCH c_emp_cursor INTO v_empno, v_lname;
+    DBMS_OUTPUT.PUT_LINE(v_empno||' '||v_lname);
+END;
+/
+
+
+
+
+
+
+-- closing the cursor 
+DECLARE
+CURSOR c_emp_cursor IS
+SELECT employee_id, last_name FROM  employees
+WHERE department_id=50; --eikhane dept id te change korlei moja hobe
+		
+v_empno employees.employee_id%TYPE;
+V_lname employees.last_name%TYPE;
+BEGIN
+	OPEN c_emp_cursor;
+    LOOP
+	FETCH c_emp_cursor INTO v_empno, v_lname;
+    EXIT WHEN c_emp_cursor%NOTFOUND;
+	DBMS_OUTPUT.PUT_LINE (v_empno||' '||v_lname);
+    END LOOP;
+    CLOSE c_emp_cursor;
+END;
+/
+
+
+-- 
+DECLARE 
+CURSOR c_emp_cursor  IS  
+SELECT employee_id, last_name FROM  employees
+WHERE department_id=30;
+v_emp_record c_emp_cursor%ROWTYPE; --cursor based record 
 
 BEGIN 
-  FOR i in 1..10 loop 
-  if i=6 or i=8 then null;
-  else 
-  insert into messages(results)
-  values(i);
-  end if;
-  end loop;
-  END;
-/
-
-
-DELETE FROM messages WHERE resultS IN (1,2,3,4,5,7,9,10);
-select * from messages; 
--- 8
-create table emp
-as select employee_id, salary from employees;
-
- alter table emp
- add stars varchar2(50);
-
- declare
-   v_empno emp.employee_id%type := 176;
-   v_asterisk emp.stars%type := null;
-   v_sal emp.salary%type;
-begin
-   select nvl(round(salary/1000),0) into v_sal
-   from emp
-   where employee_id = v_empno;
-   for i in 1..v_sal loop
-   v_asterisk := v_asterisk || '*';
-   end loop;
-   update emp
-   set stars = v_asterisk;
-   end;
-/
+    OPEN c_emp_cursor ;
+    LOOP
+        FETCH c_emp_cursor INTO v_emp_record;
+    EXIT WHEN c_emp_cursor%NOTFOUND;
+    DBMS_OUTPUT.PUT_LINE()
 
 
 
+    DECLARE 
+    CURSOR c_emp_cursor IS
+    SELECT employee_id, last_name FROM employees
+    WHERE department_id=30;
+    BEGIN
+        FOR v_emp_record IN c_emp_cursor
+         LOOP
+          DBMS_OUTPUT.PUT_LINE(v_emp_record.employee_id
+          ||' '||v_emp_record.last_name);
+         END LOOP;
+    END;
+    /
+    -- IS OPEN cursor open ase kina oita test kore
+    --%NOTFOUND cursor je row fetch korse,shey jodi oikhane data fetch na korte pare tahole notfound 1 tao painai
+    -- ROWCOUNT cursor koyta shongkha fetch korse sheta return kore
+    -- 
 
+DECLARE
+CURSOR c_emp_cursor IS
+SELECT employee_id, last_name FROM  employees
+ORDER BY employee_id;
+		
+v_emp_record c_emp_cursor%ROWTYPE;
 
-
-
-create table emply
-as select employee_id, salary from employees;
-
-alter table emply
-add bangu varchar2(50);
-
-declare v_empno emply.employee_id%TYPE:=176;
-v_asterisk emply.bangu%TYPE :=NULL;
-v_sal emply.salary%TYPE;
 BEGIN
-select nvl(round(salary/1000),0) into v_sal
-from emply
-where employee_id = v_empno;
-for i in 1..v_sal loop
-v_asterisk := v_asterisk ||'*';
-end loop;
-update emply
-set bangu=v_asterisk;
-end;
+	OPEN c_emp_cursor;
+    LOOP
+	FETCH c_emp_cursor INTO v_emp_record;
+    EXIT WHEN c_emp_cursor%ROWCOUNT>10; --rowcount jehetu 10 deya hoise tai eikhane 10 row show korbe
+	DBMS_OUTPUT.PUT_LINE (v_emp_record.employee_id||' '||v_emp_record.last_name);
+    END LOOP;
+    CLOSE c_emp_cursor;
+END;
+/
+
+-- Cursor FOR Loops Using Subqueries
+BEGIN
+    FOR v_emp_record IN (SELECT employee_id, last_name FROM employees WHERE department_id=30)
+    LOOP
+        DBMS_OUTPUT.PUT_LINE(v_emp_record.employee_id||' '||v_emp_record.last_name);
+    END LOOP;
+END;
+/
+
+
+
+-- Cursors with parameters
+DECLARE
+CURSOR c_emp_cursor (deptno NUMBER) IS  
+SELECT employee_id, last_name, department_id, job_id
+FROM employees
+WHERE department_id=deptno;
+
+BEGIN
+    FOR emp_record IN c_emp_cursor(10)
+    LOOP
+        DBMS_OUTPUT.PUT_LINE(emp_record.employee_id     ||' '||emp_record.last_name||' '||emp_record.department_id||' '||emp_record.job_id);
+    END LOOP;
+    FOR emp_record IN c_emp_cursor(30)
+   LOOP
+        DBMS_OUTPUT.PUT_LINE(emp_record.employee_id     ||' '||emp_record.last_name||' '||emp_record.department_id||' '||emp_record.job_id);
+    END LOOP;
+      FOR emp_record IN c_emp_cursor(50)
+
+     LOOP
+        DBMS_OUTPUT.PUT_LINE(emp_record.employee_id     ||' '||emp_record.last_name||' '||emp_record.department_id||' '||emp_record.job_id);
+    END LOOP;
+    END;
+    /
+
+
+-- using for update and WHERE CURRENT OF clause 
+
+create table test_emp as select employee_id, job_id, salary
+from employees where employee_id<114;
+
+DECLARE
+CURSOR c1 IS 
+SELECT employee_id, job_id, salary
+FROM test_emp FOR UPDATE;
+emp_record test_emp%ROWTYPE;
+
+BEGIN
+OPEN c1 ;
+LOOP  
+    FETCH c1 INTO emp_record;
+IF emp_record.job_id ='IT_PROG' THEN  
+UPDATE test_emp
+SET salary =emp_record.salary+1000
+    WHERE CURRENT OF c1;--you can use WHERE CURRENT OF clause FOR UPDATE of WHERE clause for satisfy the partivular condition
+END IF;
+    EXIT WHEN c1%NOTFOUND;
+END LOOP;
+END;
+/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+-- evidence ques
+    -- create a pl/sql block to perform the following:
+    a use the cursor FOR loop to operate on the data retrieved. if the salary of the employee is less than 5000 and if the manager id is either 101 or 124, display the massage "<<last_name>> Not Due for a raise"
+    -- Otherwise, display the massage "<<last_name>>Not due for a raise" 
+
+    --shohan 
+DECLARE
+    CURSOR emp_cursor IS 
+        SELECT last_name, salary, manager_id 
+        FROM employees
+        where department_id=20;
+BEGIN
+    FOR emp_rec IN emp_cursor LOOP  -- Cursor FOR loop
+        IF emp_rec.salary < 5000 
+           AND (emp_rec.manager_id=101 OR emp_rec.manager_id= 124) 
+        THEN
+            DBMS_OUTPUT.PUT_LINE(
+                emp_rec.last_name || ':  Due for a raise');
+        ELSE
+            DBMS_OUTPUT.PUT_LINE(
+                emp_rec.last_name || ':  Not due for a raise');
+        END IF;
+    END LOOP;
+END;
+/
+
+-- shohan
+
+DECLARE
+    CURSOR emp_cursor IS 
+        SELECT last_name, salary, manager_id 
+        FROM employees;
+BEGIN
+    FOR emp_rec IN emp_cursor LOOP  -- Cursor FOR loop
+        IF emp_rec.salary < 5000 
+           AND emp_rec.manager_id IN (101, 124) 
+        THEN
+            DBMS_OUTPUT.PUT_LINE(
+                emp_rec.last_name || ':  Due for a raise');
+        ELSE
+            DBMS_OUTPUT.PUT_LINE(
+                emp_rec.last_name || ':  Not due for a raise');
+        END IF;
+    END LOOP;
+END;
+/
+
+
+
+
+
+-- create a pl/sql block that uses an explicit cursor to determine the loop n salaries of employees;
+-- shohan
+
 
 
 DECLARE
-variable b_basic_percent NUMBER
-VARIABLE b_pf_percent NUMBER
-:b_basic_percent:=45;
-:b_pf_percent:=12;
+    -- 1. Declare explicit cursor
+    CURSOR emp_salary_cursor IS
+        SELECT salary
+        FROM employees;
+    
+    v_salary employees.salary%TYPE;
 BEGIN
-print b_basic_percent
-print b_pf_percent
+    -- 2. Open the cursor
+    OPEN emp_salary_cursor;
+    
+    LOOP
+        -- 3. Fetch data from cursor
+        FETCH emp_salary_cursor INTO v_salary;
+        
+        -- 4. Exit condition
+        EXIT WHEN emp_salary_cursor%NOTFOUND;
+        
+        -- 5. Process data (display salary)
+        DBMS_OUTPUT.PUT_LINE('Employee Salary: ' || TO_CHAR(v_salary, 'L99G999G999D00'));
+    END LOOP;
+    
+    -- 6. Close the cursor
+    CLOSE emp_salary_cursor;
 END;
 /
+
+-- shohan \
+
+
+DECLARE N Number :=5
+CURSOR sal_cursor IS 
+SELECT employee_id, salary
+FROM employees
+order by salary desc)
+-- shohan 
+
+
+
+
+
+
+-- create bkash transaction
+CREATE TABLE bkash_transactions (
+    transaction_id   NUMBER PRIMARY KEY,
+    sender_msisdn    VARCHAR2(15),
+    receiver_msisdn  VARCHAR2(15),
+    amount           NUMBER(10,2),
+    transaction_date DATE,
+    status           VARCHAR2(20)
+);
+
+DECLARE
+    v_transaction_id   NUMBER := 1001; -- Example ID (use a sequence in practice)
+    v_sender_msisdn    VARCHAR2(15) := '017XXXXXXXX'; -- Sender's mobile number
+    v_receiver_msisdn  VARCHAR2(15) := '019XXXXXXXX'; -- Receiver's mobile number
+    v_amount           NUMBER(10,2) := 500.00; -- Amount to send
+    v_status           VARCHAR2(20);
+BEGIN
+    -- Simulate balance check (replace with actual logic)
+    -- For simplicity, assume sender has sufficient balance
+    IF v_amount <= 0 THEN
+        RAISE_APPLICATION_ERROR(-20001, 'Invalid amount.');
+    END IF;
+
+    -- Insert the transaction
+    INSERT INTO bkash_transactions (
+        transaction_id,
+        sender_msisdn,
+        receiver_msisdn,
+        amount,
+        transaction_date,
+        status
+    ) VALUES (
+        v_transaction_id,
+        v_sender_msisdn,
+        v_receiver_msisdn,
+        v_amount,
+        SYSDATE,
+        'PENDING'
+    );
+
+    -- Simulate transaction processing
+    -- (In reality, this would involve calling bKash's API)
+    v_status := 'COMPLETED';
+    
+    -- Update transaction status
+    UPDATE bkash_transactions
+    SET status = v_status
+    WHERE transaction_id = v_transaction_id;
+
+    DBMS_OUTPUT.PUT_LINE('Transaction successful!');
+    COMMIT;
+
+EXCEPTION
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('Error: ' || SQLERRM);
+        ROLLBACK;
+END;
+/
+-- ********************CHAPTER 9  HANDLING EXCEPTION******************************************
+-- ********************CHAPTER 9  HANDLING EXCEPTION******************************************
+-- ********************CHAPTER 9  HANDLING EXCEPTION******************************************
+
+-- #############################################################################################################
+-- evidence
+-- write a PL/SQL block that applies a predefined exception in order to process only one record at  a time. The PL/SQL block selects the name of the employee with a given salary value
+CREATE table massage(results varchar2(50));
+ 
+ 
+  DECLARE
+  v_lastname employees.last_name%TYPE;
+  v_sal employees.salary%TYPE:=6000;
+  BEGIN
+  SELECT last_name INTO v_lastname
+  FROM employees
+  WHERE salary = v_sal;
+  INSERT INTO massage (results)
+  VALUES (v_lastname||'  ' ||v_sal);
+  EXCEPTION
+  WHEN NO_DATA_FOUND THEN
+  INSERT INTO massage (results)
+  VALUES('no data'||TO_CHAR(v_lastname));
+  WHEN TOO_MANY_ROWS THEN
+  INSERT INTO massage (results)
+  VALUES('TOO many ROWS'||TO_CHAR(v_lastname));
+  WHEN OTHERS THEN
+  INSERT INTO massage (results)
+  VALUES('PROBLEMS OCCURED');
+  END;
+ /
+
+SELECT & from message;
+
+DECLARE
+    -- Variable to store employee name
+    v_employee_name employees.last_name%TYPE;
+    
+    -- Input parameter (replace 5000 with the desired salary value)
+    p_salary NUMBER := 10000;
+BEGIN
+    -- Attempt to fetch a single employee with the specified salary
+    SELECT last_name
+    INTO v_employee_name
+    FROM employees
+    WHERE salary = p_salary;
+
+    -- If exactly one record is found, display the result
+    DBMS_OUTPUT.PUT_LINE('Employee with salary ' || p_salary || ': ' || v_employee_name);
+
+EXCEPTION
+    -- Predefined exception: No employee found with the given salary
+    WHEN NO_DATA_FOUND THEN
+        DBMS_OUTPUT.PUT_LINE('No employee found with salary ' || p_salary);
+    
+    -- Predefined exception: Multiple employees found with the same salary
+    WHEN TOO_MANY_ROWS THEN
+        DBMS_OUTPUT.PUT_LINE('Multiple employees have salary ' || p_salary || '. Use a cursor to process all.');
+END;
+/
+
+-- SYNTAX TO TRAP EXCEPTIONs 
+EXCEPTION
+    WHEN exception1 [OR exception2 ...] THEN   
+        statement1;
+        statement2;
+        ...
+        [WHEN exception3 [OR exception4...] THEN
+        statement1;
+        statement2;
+        ...]
+        [WHEN OTHERS THEN 
+        statement1;
+        statement2;
+        ...]
+
+-- SYNTAX TO TRAP EXCEPTIONs 
+
+
+DECLARE v_lname VARCHAR2(15);
+
+BEGIN 
+    SELECT last_name INTO v_lname
+    FROM employees
+    WHERE first_name='John';
+     DBMS_OUTPUT.PUT_LINE('John''s last name is :'||v_lname);
+END;
+/
+DECLARE 
+v_lname VARCHAR2(15);
+BEGIN 
+    SELECT last_name INTO v_lname
+    FROM employees
+    WHERE first_name='John';
+
+    DBMS_OUTPUT.PUT_LINE('John''s last name is :'||v_lname);
+    EXCEPTION
+    WHEN TOO_MANY_ROWS THEN  
+    DBMS_OUTPUT.PUT_LINE('Your select statement retrieved multiple rows. consider using a cursor' );
+END;
+/
+
+DECLARE
+CURSOR c_emp IS  
+    SELECT * FROM employees
+    WHERE employee_id>300;
+v_lname VARCHAR2(15);
+r_emp employees%ROWTYPE;
+BEGIN
+/* SELECT * INTO r_emp FROM employees
+WHERE employee_id>500;
+SELECT last_name INTO v_lname
+FROM employees
+WHERE first_name='John';
+DBMS_OUTPUT.PUT_LINE('John''s last name is :' ||v_lname);
+*/
+CLOSE c_emp;
+EXCEPTION 
+WHEN NO_DATA_FOUND THEN 
+DBMS_OUTPUT.PUT_LINE('Select statement returned no data.');
+WHEN TOO_MANY_ROWS THEN  
+DBMS_OUTPUT.PUT_LINE('Select statement retreived multiple rows. Consider using a cursor.');
+WHEN OTHERS THEN  
+DBMS_OUTPUT.PUT_LINE('For all other errors.');
+END;
+/
+
+DECLARE
+CURSOR c_emp IS  
+    SELECT * FROM employees
+    WHERE employee_id>300;
+v_lname VARCHAR2(15);
+r_emp employees%ROWTYPE;
+BEGIN
+ SELECT * INTO r_emp FROM employees
+WHERE employee_id>500;
+SELECT last_name INTO v_lname
+FROM employees
+WHERE first_name='John';
+DBMS_OUTPUT.PUT_LINE('John''s last name is :' ||v_lname);
+
+CLOSE c_emp;
+EXCEPTION 
+WHEN NO_DATA_FOUND THEN 
+DBMS_OUTPUT.PUT_LINE('Select statement returned no data.');
+WHEN TOO_MANY_ROWS THEN  
+DBMS_OUTPUT.PUT_LINE('Select statement retreived multiple rows. Consider using a cursor.');
+WHEN OTHERS THEN  
+DBMS_OUTPUT.PUT_LINE('For all other errors.');
+END;
+/
+
+
+
+-- NON PREDEFINED ERROR TRAPPING
+
+
+ BEGIN
+     INSERT INTO departments (department_id, department_name)
+     VALUES(280, NULL);
+ END;
+/
+
+
+
+DECLARE 
+e_insert_excep EXCEPTION ;
+PRAGMA EXCEPTION_INIT(e_insert_excep, -01400);
+BEGIN 
+    INSERT INTO departments (department_id, department_name)
+    VALUES(280, NULL);
+    EXCEPTION 
+    WHEN 
+    e_insert_excep
+    THEN 
+        DBMS_OUTPUT.PUT_LINE('Insert operation failed');
+        DBMS_OUTPUT.PUT_LINE(SQLERRM);
+        DBMS_OUTPUT.PUT_LINE(SQLCODE);
+END;
+/
+
+-- PROPAGATING EXCEPTIONS IN A SUBBLOCK
+DECLARE 
+...
+e_no_rows EXCEPTION;
+e_integrity EXCEPTION;
+PRAGMA EXCEPTION_INIT(e_integrity,-2292);
+BEGIN 
+    FOR c_record IN  emp_cursor 
+    LOOP  
+        BEGIN
+            SELECT ...
+            UPDATE ...
+            IF SQL%NOTFOUND THEN   
+            RAISE e_no_rows;
+            END IF;
+        END;
+    END LOOP;
+
+EXCEPTION
+    WHEN e_integrity THEN...
+    WHEN e_no_rows THEN...
+END;
+/
+
+-- RAISE APPLICATION ERROR PROCEDURE  
+-- SYNTAX(RAISE APPLICATION ERROR)
+-- raise_application_erro(error_number, message[,{TRUE|FALSE}]); 
+
+-- SYNTAX(RAISE )
+-- RAISE EXCEPTION_NAME;
+
+-- EXECUTABLE SECTION
+BEGIN
+...
+DELETE FROM employees
+    WHERE manager_id=v_mgr;
+IF  SQL%NOTFOUND THEN   
+RAISE_APPLICATION_ERROR(-20202,'This is not  a valid manager');
+END IF;
+...
+-- EXCEPTION SECTION
+...
+EXCEPTION 
+    WHEN  NO_DATA_FOUND THEN   
+    RAISE_APPLICATION_ERROR(-20201,'Manager is not a valid employee.');
+END;
+/
+
+DECLARE e_name EXCEPTION;
+BEGIN
+    ...
+    DELETE FROM  employees
+    WHERE last_name='Higgins';
+    IF SQL%NOTFOUND THEN RAISE e_name;
+    END IF;
+EXCEPTION
+    WHEN e_name THEN  
+    RAISE_APPLICATION_ERROR(-20999,'This is not a valid last name');
+    ...
+    END;
+    /
+
+
+
+
+DECLARE
+v_mgr number:=300;
+e_mgr EXCEPTION;
+PRAGMA EXCEPTION_INIT (e_mgr,-20202);
+BEGIN
+    delete  from employees 
+    where manager_id=v_mgr;
+    IF SQL%NOTFOUND THEN
+    RAISE e_mgr;
+    END IF;
+    EXCEPTION
+    WHEN  e_mgr THEN 
+    RAISE_APPLICATION_ERROR(-20202, 'This is not a valid manager');
+    END;
+    /
+
+    DECLARE
+/*
+ERROR at line 1:
+ORA-20202: This is not a valid manager
+ORA-06512: at line 13*/
+-- evidence ques
+    -- create a pl/sql block to perform the following:
+    a use the cursor FOR loop to operate on the data retrieved. if the salary of the employee is less than 5000 and if the manager id is either 101 or 124, display the massage "<<last_name>> Not Due for a raise"
+    -- Otherwise, display the massage "<<last_name>>Not due for a raise" 
+
+    
+DECLARE
+    CURSOR emp_cursor IS 
+        SELECT last_name, salary, manager_id 
+        FROM employees;
+BEGIN
+    FOR emp_rec IN emp_cursor LOOP  -- Cursor FOR loop
+        IF emp_rec.salary < 5000 
+           AND emp_rec.manager_id =101 OR emp_rec.manager_id=  124 
+        THEN
+            DBMS_OUTPUT.PUT_LINE(
+                emp_rec.last_name || ':  Due for a raise');
+        ELSE
+            DBMS_OUTPUT.PUT_LINE(
+                emp_rec.last_name || ':  Not due for a raise');
+        END IF;
+    END LOOP;
+END;
+/
+
+DECLARE 
+cursor emp_cursor IS SELECT last_name, salary, job_id 
+FROM employees
+WHERE department_id=10;
+BEGIN
+    FOR emp_cursor IN emp_record
+    IF  
+
+
+
+
+
+-- create a pl/sql block that uses an explicit cursor to determine the loop n salaries of employees;
+
+DECLARE
+       CURSOR emp_salary_cursor IS
+        SELECT salary
+        FROM employees;
+    
+    v_salary employees.salary%TYPE;
+BEGIN
+    -- 2. Open the cursor
+    OPEN emp_salary_cursor;
+    
+    LOOP
+        -- 3. Fetch data from cursor
+        FETCH emp_salary_cursor INTO v_salary;
+        
+        -- 4. Exit condition
+        EXIT WHEN emp_salary_cursor%NOTFOUND;
+        
+        -- 5. Process data (display salary)
+        DBMS_OUTPUT.PUT_LINE('Employee Salary: ' || TO_CHAR(v_salary, 'L99G999G999D00'));
+    END LOOP;
+    
+    -- 6. Close the cursor
+    CLOSE emp_salary_cursor;
+END;
+/
+
+-- startup of device
+sys as sysdba
+sys
+alter session set container=orclpdb;
+alter pluggable database open;
+conn hr/hr@orclpdb;
+cl scr
+
+hr/hr@orclpdb
+
+
+
+-- #############################################################################################################
+
+
+-- chapter 10 STORED procedure and fucntions
+
+
+-- #############################################################################################################
+-- syntax
+CREATE [OR REPLACE] PROCEDURE procedure_name
+[(argument1 [mode1] datatype1,
+  argument2 [mode2] datatype2,
+  ...)]
+IS |AS
+procedure_body;
+
+
+
+
+
+
+
+
+select * from user_source;
+
+select * from user_source where name = add_dept;
+
+
+
+-- CREATING a procedure example
+
+drop table dept PURGE;
+
+CREATE TABLE dept AS SELECT * FROM departments;
+CREATE OR REPLACE PROCEDURE add_dept IS  
+        v_dept_id dept.department_id%TYPE;
+        v_dept_name dept.department_name%TYPE;
+    BEGIN 
+        v_dept_id:=200;
+        v_dept_name:='ST-Curriculum';
+
+        INSERT INTO  dept(department_id, department_name)
+                VALUES (v_dept_id, v_dept_name);
+        DBMS_OUTPUT.PUT_LINE(' Inserted '||SQL%ROWCOUNT||' row ');
+    END;
+    /
+    show errors  --lekhle error dekhay 
+
+
+    -- user_objects table for store created objects
+    Select object_name, object_type FROM user_objects;
+
+    -- the source of the procedure is stored in the user_source table 
+    select * from user_source where name ='ADD_DEPT';
+
+    -- invoking a procedure 
+    begin 
+            add_dept ;
+    end;
+    /    
+
+    select * from dept
+    where department_id=200;
+
+
+
+
+
+    -- FUCTION syntax
+  CREATE [OR REPLACE] FUNCTION function_name
+[(argument1 [mode1] datatype1,
+  argument2 [mode2] datatype2,
+  ...)]
+RETURN datatype
+IS |AS
+function_body;
+
+-- function and procecure are bothe the subprograms
+
+CREATE OR REPLACE FUNCTION get_sal
+(p_id employees.employee_id%TYPE) RETURN NUMBER  
+IS 
+v_sal employees.salary%TYPE:=0;
+BEGIN
+    SELECT salary INTO v_sal
+    FROM employees
+    WHERE employee_id=p_id;
+    RETURN v_sal;
+    END get_sal;
+    /
+
+
+set serveroutput on 
+
+EXECUTE DBMS_OUTPUT.PUT_LINE(get_sal(100))
+
+EXECUTE DBMS_OUTPUT.PUT_LINE(get_sal(111))
+
+-- creating a function
+CREATE FUNCTION check_sal RETURN Boolean IS    
+v_dept_id employees.department_id%TYPE;
+v_empno employees.employee_id%TYPE;
+v_sal employees.salary%TYPE;
+v_avg_sal employees.salary%type;
+
+BEGIN 
+    v_empno:=205;
+    SELECT salary,department_id INTO v_sal, v_dept_id FROM  employees
+    WHERE employee_id =v_empno;
+    SELECT avg(salary) INTO v_avg_sal FROM employees WHERE department_id=v_dept_id;
+    IF v_sal > v_avg_sal THEN   
+    RETURN TRUE;
+    ELSE  
+    RETURN FALSE;
+    END IF;
+    EXCEPTION 
+    WHEN NO_DATA_FOUND THEN
+    RETURN NULL;
+END;
+/
+
+-- INVOKING A FUNCTION 
+DBMS_OUTPUT.PUT_LINE()
+
+BEGIN 
+    IF (check_sal IS NULL) THEN
+    DBMS_OUTPUT.PUT_LINE('Salary>average');
+    ELSE
+    DBMS_OUTPUT.PUT_LINE('Salary<average');
+    END IF;
+END;
+/
+
+-- Passing a Parameter to the Function
+
+DROP FUNCTION check_sal;
+CREATE OR REPLACE FUNCTION check_sal(p_empno employees.employee_id%TYPE)
+RETURN Boolean IS 
+v_dept_id employees.department_id%TYPE;
+v_sal employees.salary%TYPE;
+v_avg_sal employees.salary%TYPE;
+BEGIN
+    SELECT salary, department_id INTO v_sal, v_dept_id FROM employees 
+    WHERE employee_id=p_empno;
+    SELECT avg(salary) INTO v_avg_sal FROM employees
+    WHERE department_id =v_dept_id;
+    IF v_sal>v_avg_sal THEN   
+    RETURN TRUE;
+    ELSE 
+    RETURN FALSE;
+    END IF;
+    EXCEPTION
+    WHEN NO_DATA_FOUND THEN  
+    RETURN NULL;
+
+END;
+/       
+
+--  Invoking the function with a parameter
+BEGIN 
+    DBMS_OUTPUT.PUT_LINE ('Checking for employee with id 205');
+    IF (check_sal(205) IS NULL )THEN 
+    DBMS_OUTPUT.PUT_LINE('The function returned NULL due to exception');
+    ELSIF  (check_sal(205)) THEN   
+    DBMS_OUTPUT.PUT_LINE('Salary>average');
+    ELSE
+    DBMS_OUTPUT.PUT_LINE('Salary<average');
+    END IF;
+
+    DBMS_OUTPUT.PUT_LINE('Checking for employee with id 70');
+    IF (check_sal(70) IS NULL ) THEN   
+    DBMS_OUTPUT.PUT_LINE('The function returned NULL due to exception');
+
+    ELSIF  (check_sal(70)) THEN   
+    DBMS_OUTPUT.PUT_LINE('Salary>average');
+    ELSE
+      DBMS_OUTPUT.PUT_LINE('Salary<average');
+    END IF  ;
+END;
+/
+
+
+-- #############################################################################################################
+-- #############################################################################################################
+-- ****************************************volume 1 (plsql)************************************************
+
+
+
+-- #############################################################################################################
+-- #############################################################################################################
+-- #############################################################################################################
+
+
+
+
+
+-- #############################################################################################################
+-- #############################################################################################################
+-- ****************************************CHAPTER 2 plsql volume 1****************************************
+
+-- #############################################################################################################
+-- #############################################################################################################
+
+
+
+
+
+-- Creating procedures with the sql CREATE OR REPLACE statement
+CREATE [OR REPLACE] PROCEDURE procecure_name
+[(parameter1 [mode]) datatype1,
+  parameter2 [mode]) datatype2,...]
+  IS|AS    
+--   plsql block
+  [local_variable_declarations;...]
+  BEGIN 
+    --actions;
+  END[procecure_name];
+--plsql block
+
+
+-- formal and actual parameters
+-- Procedure definition, Formal_parameters
+CREATE PROCEDURE raise_sal(p_id NUMBER, p_sal NUMBER) IS 
+BEGIN
+    ...
+END raise_sal;
+
+-- Procedure calling, Actual parameters (arguments)
+v_emp_id:=100;
+raise_sal(v_emp_id,2000)
+-- procedural parameter Modes
+CREATE PROCEDURE proc_name(param_name [mode] datatype)
+-- using the IN parameter Mode 
+CREATE OR REPLACE PROCEDURE raise_salary
+(p_id IN employees. employee_id%TYPE,
+p_percent IN NUMBER)
+IS
+BEGIN
+    UPDATE employees
+    SET salary=salary*(1+p_percent/100)
+    WHERE employee_id=p_id;
+END raise_salary;
+
+SELECT salary FROM employees where employee_id=176;
+EXECUTE raise_salary(176,10)
+
+
+-- Using the OUT parameter Mode 
+CREATE OR REPLACE PROCEDURE query_emp
+(p_id IN employees. employee_id%TYPE,
+p_name OUT employees.last_name%TYPE,
+p_salary OUT employees.salary%TYPE) 
+IS
+BEGIN 
+    SELECT last_name, salary INTO    p_name, p_salary
+    FROM employees
+    WHERE employee_id=p_id;
+END query_emp;
+/
+
+
+
+
+SET SERVEROUTPUT ON
+DECLARE 
+    v_emp_name employees.last_name%TYPE;
+    v_emp_sal employees.salary%TYPE;
+BEGIN
+    query_emp(171,v_emp_name, v_emp_sal);
+    DBMS_OUTPUT.PUT_LINE(v_emp_name||' earns '||TO_CHAR(v_emp_sal,'$999,999.00'));--to char kore dilam jate salary number ta varchar hishebe ashe
+END;
+/
+
+-- Using the IN OUT parameter mode 
+CREATE OR REPLACE PROCEDURE format_phone
+(p_phone_no IN OUT VARCHAR2) IS
+BEGIN
+    p_phone_no:='('||SUBSTR(p_phone_no,1,3)||
+                ')'||SUBSTR(p_phone_no,1,3)||
+                '-'||SUBSTR(p_phone_no,7);
+END format_phone;
+/
+
+VARIABLE b_phone_no VARCHAR2(15)
+EXECUTE :b_phone_no:='01704030009'
+PRINT b_phone_no
+EXECUTE format_phone(:b_phone_no)
+PRINT b_phone_no
+
+-- viewing the OUT parameters:
+--  using the DBMS_OUTPUT.PUT_LINE subroutine
+SET SERVEROUTPUT ON
+
+DECLARE
+    v_emp_name employees.last_name%TYPE;
+    v_emp_sal employees.salary%TYPE;
+BEGIN
+    query_emp(171,v_emp_name, v_emp_sal);
+    DBMS_OUTPUT.PUT_LINE('Name: '||v_emp_name);
+    DBMS_OUTPUT.PUT_LINE('Salary: '||v_emp_sal);
+END;
+
+-- viewing OUT parameters 
+VARIABLE b_name VARCHAR2(25)
+VARIABLE b_sal NUMBER
+EXECUTE b_name b_sal
+
+
+-- passing Actual Parameters:
+-- creating the add_dept procedure
+CREATE OR REPLACE PROCEDURE add_dept(
+    p_name IN departments.department_name%TYPE,
+    p_loc IN departments.location_id%TYPE)
+    IS
+    BEGIN
+        INSERT INTO departments(department_id,department_name,location_id)
+        VALUES (departments_seq.NEXTVAL,p_name,p_loc);
+    END add_dept;
+    /
+
+    -- Passing Actual Parameters 
+    -- Passing Actual Parameters using the Positional notation.
+    EXECUTE add_dept('TRAINING',2500)
+
+   -- Passing Actual Parameters using the named notation.
+   EXECUTE add_dept(p_loc=>2400,p_name=>'EDUCATION')
+    -- Using the DEFAULT option for the parameters
+    CREATE OR REPLACE PROCEDURE add_dept(
+        p_name departments.department_name%TYPE:='Unknown',
+        p_loc departments.location_id%TYPE DEFAULT 1700)
+    IS 
+    BEGIN
+        INSERT INTO departments(department_id, department_name,location_id)
+        VALUES(departments_seq.NEXTVAL,p_name,p_loc);
+    END add_dept;
+    /
+
+    EXECUTE add_dept
+    EXECUTE add_dept ('ADVERTISING',p_loc=>1200)
+    EXECUTE add_dept (p_loc=>1200)
+
+    select department_id, department_name, location_id from departments;
+
+    -- Calling procedures
+    CREATE OR REPLACE PROCEDURE process_employees
+    IS 
+        CURSOR cur_emp_cursor IS
+        SELECT employee_id
+        FROM employees;
+    BEGIN
+        FOR emp_rec IN cur_emp_cursor
+        LOOP
+            raise_salary(emp_rec.employee_id,10);
+        END LOOP;
+        COMMIT;
+    END process_employees;
+    /
+    EXECUTE process_employees;
+    -- Handled Exceptions
+    CREATE PROCEDURE add_department(
+        p_name VARCHAR2,p_mgr NUMBER,p_loc NUMBER) IS  
+    BEGIN 
+        INSERT INTO departments(department_id,department_name, manager_id, location_id)
+        VALUES (departments_seq.NEXTVAL,p_name,p_mgr,p_loc);
+        DBMS_OUTPUT.PUT_LINE('Added Dept:'||p_name);
+    EXCEPTION
+        WHEN OTHERS THEN   
+        DBMS_OUTPUT.PUT_LINE('Err: adding dept: '||p_name);
+    END;
+/
+    CREATE PROCEDURE create_departments IS    
+    BEGIN 
+        add_department('Media',100,1800);
+        add_department('Editing',99,1800);
+        add_department('Advertising',101,1800);
+    END;
+/
+-- Exceptions Not Handled 
+SET SERVEROUTPUT ON 
+CREATE PROCEDURE add_department_noex(
+    p_name VARCHAR2,p_mgr NUMBER,p_loc NUMBER
+) IS    
+BEGIN
+    INSERT INTO DEPARTMENTS(department_id,
+    department_name,manager_id,location_id)
+    VALUES(departments_seq.NEXTVAL,p_name,p_mgr,p_loc);
+    DBMS_OUTPUT.PUT_LINE('Added Dept: '||p_name);
+END;
+/
+
+CREATE PROCEDURE create_departments_noex IS     
+BEGIN 
+    add_department_noex ('Media',100,1800);
+ add_department_noex ('Editing',99,1800);
+ add_department_noex ('Advertising',101,1800);
+END;
+/
+EXECUTE create_departments_noex;
+-- removing procedures using the drop 
+DROP Procedure raise_salary;
+
+-- viewing procedure information using the data dictionary views 
+DESCRIBE user_source
+
+SELECT text 
+FROM user_source
+WHERE name='ADD_DEPT' AND type= 'PROCEDURE'
+ORDER BY line;
+-- Subprogram with a BOOLEAN Parameter
+CREATE OR REPLACE PROCEDURE p(x BOOLEAN) AUTHID
+CURRENT_USER AS   
+BEGIN
+
+    IF x THEN   
+        DBMS_OUTPUT.PUT_LINE('x is true');
+    END IF;
+END;
+/
+DECLARE
+b BOOLEAN:=TRUE;
+BEGIN
+    p(b);
+    END;
+    /
+
+
+
+
+
+--******************** Chapter 3 creating Funcitons and debugging subprograms
+--  creating functions
+CREATE  [OR REPLACE] FUCTION function_name
+[(parameter1 [mode1] datatype1,...)]
+RETURN datatype IS|AS    
+[local_variable_declarations;
+...]
+BEGIN
+    --actions;
+    RETURN expression;
+END [function_name];
+
+-- Creating and Invoking a stored Function Using the CREATE FUNCTION statement
+CREATE OR REPLACE FUNCTION get_sal
+(p_id employees.employee_id%TYPE) RETURN NUMBER IS     
+v_sal employees.salary%TYPE:=0;
+BEGIN
+    SELECT Salary
+    INTO v_sal
+    FROM employees
+    WHERE employee_id=p_id;
+    RETURN v_sal;
+END get_sal;
+/
+
+-- Invoke the function as an expression or as 
+-- a parameter value.
+ EXECUTE  DBMS_OUTPUT.PUT_LINE(get_sal(100))
+
+-- Using Different Methods for Executing Functions
+-- As a PL/SQL expression , get the results using host variables
+VARIABLE b_salary NUMBER
+EXECUTE :b_salary :=get_sal(100)
+
+-- As a PL/SQL expression , get the results using a local variable
+SET SERVEROUTPUT ON 
+DECLARE 
+sal employees.salary%TYPE;
+BEGIN
+    sal:=get_sal(100);
+    DBMS_OUTPUT.PUT_LINE('The salary is: '||sal);
+END;
+/
+-- Using different methods for executing functions
+-- Use as a parameter to another subprogram
+EXECUTE DBMS_OUTPUT.PUT_LINE(get_sal(100))
+
+-- Use in a SQL statement (subject to restrictions)
+SELECT job_id, get_sal(employee_id)
+FROM employees;
+
+-- Using a Function in a SQL expression
+CREATE OR REPLACE FUNCTION tax(p_value IN NUMBER)  
+RETURN NUMBER IS     
+BEGIN 
+    RETURN (p_value * 0.08);
+END tax;
+/
+SELECT employee_id,last_name, salary,tax(salary)
+FROM employees
+WHERE department_id=100;
+
+
+-- Calling User defined functions in sql statements
+SELECT employee_id, tax(salary)
+FROM employees
+WHERE tax(salary)>(SELECT MAX(tax(salary))
+                    FROM employees
+                    WHERE department_id =30)
+ORDER BY tax(Salary) desc;
+
+-- Restrictions on calling  functions from sql
+
+CREATE OR REPLACE FUCTION dml_call_sql(p_sal NUMBER)
+    RETURN NUMBER IS     
+BEGIN 
+    INSERT into employees( employee_id, last_name, email, hire_date,job_id,salary)
+    VALUES( 1, 'Frost', 'jfrost@company.com',SYSDATE, 'SA_MAN',p_sal);
+    RETURN (p_sal+100);
+END;
+
+UPDATE employees
+    SET salary =dml_call_sql(2000)
+WHERE employee_id =170;
+
+
+
+-- 
+CREATE OR REPLACE FUNCTION query_call_sql(p_a NUMBER )
+RETURN NUMBER IS    
+v_s NUMBER;
+BEGIN 
+    SELECT salary INTO    v_s FROM employees
+    WHERE employee_id=170;
+    RETURN (v_s+p_a);
+END;
+
+
+Update employees SET salary =query_call_sql(100)
+WHERE employee_id =170;
+
+
+-- Named and Mixed Notationj From sql
+CREATE OR REPLACE FUNCTION f(
+    p_parameter_1 IN NUMBER DEFAULT 1,
+    p_parameter_e IN NUMBER DEFAULT 5)
+RETURN NUMBER
+IS     
+v_var NUMBER;
+BEGIN 
+    v_var :=p_parameter_1+(p_parameter_5*2);
+RETURN v_var;
+END f;
+/
+SELECT f(p_parameter_5 =>10) FROM DUAL;
+
+SELECT f(p_parameter_5 =>10) FROM DUAL;
+
+DESCRIBE user_source
+
+SELECT TEXT 
+FROM user_source
+WHERE type='FUNCTION'
+ORDER BY line;
+
+
+DROP function f;
+
+-- Debugging pl/sql subprograms using the sql developer debugger
+GRANT DEBUG ANY PROCEDURE TO ora61;
+GRANT DEBUG CONNECT SESSION TO ora61 ;
+
+-- the procedure function
+create or replace procedure add_job_history (
+    p_emp_id job_history.employee_id%TYPE
+    p_start_date job_history.start_date%TYPE
+    p_end_date job_history.end_date%TYPE
+     p_job_id job_history.job_id%TYPE
+     p_department_id job_history.department_id%type
+)
+IS
+BEGIN
+    INSERT INTO job_history(employee_id,start_date,end_date,job_id,department_id)
+    VALUES(p_emp_id,p_start_date,p_end_date,p_job_id,p_department_id);
+    END add_job_history;
+
+    -- DEBUGGING a procedure
+    CREATE OR REPLACE PROCEDURE emp_list(pmaxrows IN NUMBER) AS 
+    CURSOR emp_cursor IS     
+    SELECT d.department_name,
+    e.employee_id,
+    e.last_name,
+    e.salary,
+    e.commission_pct
+    FROM departments d,
+    employees e    
+    WHERE d.department_id=e.department_id;
+    emp_record emp_cursor %ROWTYPE ;
+    type emp_tab_type IS TABLE OF emp_cursor %ROWTYPE INDEX BY BINARY_INTEGER;
+    emp_tab emp_tab_type;
+    i NUMBER :=1;
+    v_city VARCHAR2(30);
+
+    BEGIN 
+        OPEN emp_cursor;
+        FETCH emp_cursor
+        INTO emp_record;
+        emp_tab(i):=emp_record;
+        WHILE (emp_cursor %FOUND )
+            AND(i<=pmaxrows)
+        LOOP 
+            i:=i+1;
+            FETCH emp_cursor
+            INTO emp_record;
+            emp_tab(i):=emp_record;
+            v_city:=get_location(emp_record.department_name);
+            DBMS_OUTPUT.PUT_LINE('Employee '|| emp_record.last_name||' Works in '||v_city);
+        END LOOP;
+
+        CLOSE emp_cursor   ;
+        FOR j in REVERSE 1..i
+        LOOP
+            DBMS_OUTPUT.PUT_LINE(emp_tab(j).last_name);
+        END LOOP;
+        END emp_list;
+
+-- Debugging a procedure creating a new get_location fucntion
+CREATE OR REPLACE FUNCTION get_location(p_deptname IN varchar2)
+ RETURN VARCHAR2 AS 
+ v_loc_id NUMBER;
+ v_city VARCHAR2(30);
+ BEGIN
+    SELECT d.location_id,
+    l.city
+    INTO v_loc_it,
+    v_city
+    FROM departments d, locations l 
+    WHERE UPPER (department_name) = UPPER (p_deptname)
+    AND d.location_id=l.location_id;
+    RETURN v_city;
+    END get_location; 
+ /
+ 
+ 
+ 
+ 
+ 
+ --******************** Chapter 4 creating Packages************
+--******************************************************************************************
+
+
+CREATE [OR REPLACE ] PACKAGE package_name IS|AS 
+public type and variable declarations
+subprogram specifications
+END [package_name];
+
+-- package specification
+-- the package spec with a public variable and a 
+-- public procedure that are accessible from outside the package.
+
+CREATE OR REPLACE PACKAGE comm_pkg IS   
+v_std_comm NUMBER :=0.10;--initialized to 0.10
+Procedure reset_comm(p_new_comm NUMBER);
+END comm_pkg;
+/
+
+--  CREATING A Package body
+
+CREATE [OR REPLACE ]PACKAGE  BODY package_name IS|AS    
+private type and variable declarations
+subprogram bodies
+[BEGIN initialization statements]
+END [package_name];
+
+
+-- example of a package body
+CREATE OR REPLACE PACKAGE BODY comm_pkg IS     
+FUNCTION validate (p_comm NUMBER ) RETURN BOOLEAN IS     
+v_max_comm employees.commission_pct%TYPE;
+
+BEGIN 
+    SELECT MAX (commission_pct) INTO    v_max_comm
+    FROM employees
+    RETURN (p_comm BETWEEN 0.0 AND v_max_comm);
+    END validate;
+
+PROCEDURE reset_comm (p_new_comm NUMBER) IS 
+    BEGIN
+        IF validate(p_new_comm ) THEN   
+            v_std_comm :=p_new_comm;--reset public var
+        ELSE RAISE_APPLICATION_ERROR(
+            -20210,'BAD COMMISSION'
+        );
+        END IF;
+        END reset_comm;
+        END comm_pkg;
+
+        -- Warning: Package Body created with compilation errors.
+
+-- invoking the Package subprograms
+-- invoke a function within the same packages;
+CREATE OR REPLACE PACKAGE BODY comm_pkg IS...
+PROCEDURE reset_comm(p_new_comm NUMBER) IS    
+BEGIN
+    IF validate(p_new_comm) THEN
+    v_std_comm:=p_new_comm;
+    ELSE...
+    END IF;
+    END rese;
+    END comm_pkg;
+    -- invoke a package procedure from sql plus
+    EXECUTE comm_pkg.reset_comm(0.15)
+    -- invoke a package procedure in a different schema:
+    EXECUTE scott.comm_pkg.reset_comm(0.15)
+
+    -- ####### Creating and Using Bodiless packages
+    CREATE OR REPLACE PACKAGE   global_consts IS    
+    c_mile_2_kilo CONSTANT  NUMBER :=1.6093;
+    c_kilo_2_mile  CONSTANT  NUMBER :=0.6214;
+    c_yard_2_meter CONSTANT  NUMBER :=0.9144;
+    c_meter_2_yard CONSTANT  NUMBER :=1.0936;
+    END global_consts;
+
+    SET SERVEROUTPUT ON   
+    BEGIN
+        DBMS_OUTPUT.PUT_LINE('20 miles = '||
+        20*global_consts.c_mile_2_kilo|| ' Km');
+    END;
+
+    SET SERVEROUTPUT ON   
+    CREATE FUNCTION mtr2yrd(p_m NUMBER) RETURN NUMBER IS 
+    BEGIN
+        RETURN(p_m*global_consts.c_meter_2_yard);
+        END mtr2yrd;
+        /
+    EXECUTE DBMS_OUTPUT.PUT_LINE(mtr2yrd(1))
+
+    -- Viewing Packages by Using the Data dictionary
+    -- view the package specification.
+    SELECT text 
+    FROM user_source
+    WHERE name='COMM_PKG' AND type='PACKAGE'
+    ORDER BY LINE;
+
+    -- view the package bidy.
+    SELECT text   
+    FROM user_source
+    WHERE name='COMM_PKG' AND type='PACKAGE BODY'
+    ORDER BY LINE;
+
+    -- Remobe the package specification and body
+    DROP PACKAGE package_name;
+    -- Remove the package body only
+    DROP PACKAGE BODY package_name;
